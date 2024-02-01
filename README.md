@@ -1,5 +1,5 @@
-## Note the specific details of this university assignment have been removed to prevent against threats of plagiarism ##
-## The practical relevance of the project stand as node classification GraphSAGE graph neural network using Node2Vec and Word2Vec embedding features ## 
+### Note the specific details of this university assignment have been removed to prevent against threats of plagiarism
+### The practical relevance of the project stand as node classification GraphSAGE graph neural network using Node2Vec and Word2Vec embedding features
 Step 1: Make sure all necessary packages have been installed:
 	os
 	pandas
@@ -22,6 +22,7 @@ Step 2: Ensure the following files are in the same directory as classifier.py:
 
 Step 3: Navigate to the directory containing classifier.py in the terminal 
 	and run "$ python classifier.py" or "./classifier.py"
+ 
 ============================================================================================
 
 Methodology: node2Vec and word2vec embeddings were used to benefit from both types of vectors. Data was organized based on pandas dataframe indices to avoid mislabeling. Large 
