@@ -1,31 +1,49 @@
-### Note the specific details of this university assignment have been removed to prevent against threats of plagiarism
-### The practical relevance of the project stand as node classification GraphSAGE graph neural network using Node2Vec and Word2Vec embedding features
-Step 1: Make sure all necessary packages have been installed:
-	os
-	pandas
-	networkx
-	numpy
-	gensim
-	node2vec
-	torch
-	dgl
-	sklearn
-	matplotlib
+# Node Classification with GraphSAGE 🔗
 
-Step 2: Ensure the following files are in the same directory as classifier.py:
-	network.txt
-	categories.txt
-	test.txt
-	titles.txt
-	train.txt
-	val.txt
+## 📋 Overview
 
-Step 3: Navigate to the directory containing classifier.py in the terminal 
-	and run "$ python classifier.py" or "./classifier.py"
- 
-============================================================================================
+A GraphSAGE graph neural network that classifies nodes in a graph by combining **Node2Vec** structural embeddings with **Word2Vec** textual embeddings. Fusing both feature types lets the model exploit *how* a node is connected (graph topology) and *what* it's about (text content) simultaneously.
 
-Methodology: node2Vec and word2vec embeddings were used to benefit from both types of vectors. Data was organized based on pandas dataframe indices to avoid mislabeling. Large 
-number of embeddings used with large dropout rate for optimal opportunity to discover 
-trends in features while also avoiding overfitting. Multiple SAGEConv layers used to 
-avoid train loss from converging too quickly without good test accuracy. Visualization function used to see progress of embeddings and classification
+> **Note:** The specific details of the original university assignment (dataset domain, target categories) have been removed to prevent plagiarism. The project stands on its general relevance as a node-classification reference implementation.
+
+## 🧠 Approach
+
+- **Architecture:** Multiple stacked `SAGEConv` layers from DGL
+- **Node features:** Concatenation of Node2Vec embeddings (graph structure) and Word2Vec embeddings (node titles / text)
+- **Regularization:** Large embedding dimensions paired with a high dropout rate — trades capacity for generalization so the model can surface nuanced feature interactions without overfitting
+- **Training choice:** Multiple SAGEConv layers prevent train loss from collapsing too quickly relative to validation accuracy
+- **Visualization:** Built-in function plots embedding trajectories and classification progress across epochs
+
+## 📊 Dataset
+
+- `network.txt` — edge list defining the graph
+- `titles.txt` — textual feature for each node (fed through Word2Vec)
+- `categories.txt` — class labels
+- `train.txt` / `val.txt` / `test.txt` — node ID splits
+
+## 🚀 Quick Start
+
+### Prerequisites
+```bash
+pip install pandas networkx numpy gensim node2vec torch dgl scikit-learn matplotlib
+```
+
+### Run
+Place `network.txt`, `categories.txt`, `titles.txt`, `train.txt`, `val.txt`, and `test.txt` alongside `classifier.py`, then:
+
+```bash
+python classifier.py
+# or
+./classifier.py
+```
+
+## 📁 Repository Contents
+
+- `classifier.py` — main training + evaluation pipeline (GraphSAGE model, embedding generation, training loop, visualization)
+- `Node Classification.ipynb` — notebook version of the full pipeline
+- `Facebook_Graph.ipynb` — companion notebook applying the same approach to a Facebook graph dataset
+- `network.txt` — graph edge list
+- `titles.txt` — per-node textual features
+- `categories.txt` — class labels
+- `train.txt` / `val.txt` / `test.txt` — train/val/test node splits
+- `test_nodes_simple.txt` / `test_nodes_detailed.txt` — prediction outputs
