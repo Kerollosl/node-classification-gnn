@@ -47,3 +47,8 @@ python classifier.py
 - `categories.txt` — class labels
 - `train.txt` / `val.txt` / `test.txt` — train/val/test node splits
 - `test_nodes_simple.txt` / `test_nodes_detailed.txt` — prediction outputs
+
+
+## Cleanup behavior and validation limits
+
+Canonical execution is the Python script; historical notebooks are retained. Features/edges use explicit node-row mapping, full-vector text means and seeded execution. Saved artifacts include features, node IDs and model widths. Full training and historical notebook parity have not been independently verified.

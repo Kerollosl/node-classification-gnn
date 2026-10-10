@@ -12,6 +12,9 @@ Original file is located at
 # Commented out IPython magic to ensure Python compatibility.
 # Install required packages.
 import os
+from graph_utils import node_rows, mean_embedding
+import random
+random.seed(42)
 import pandas as pd
 import networkx as nx
 import numpy as np
@@ -60,7 +63,7 @@ def create_df(file):
 
 titles_df = create_df('titles.txt')#categories_df = create_df('categories.txt')
 network_df = create_df('network.txt').astype(int)
-test_nodes = pd.read_csv(path+'test.txt', header=None, squeeze=True).tolist()
+test_nodes = pd.read_csv(path+'test.txt', header=None).iloc[:, 0].tolist()
 categories_df = create_df('categories.txt')
 train_df = create_df('train.txt')
 val_df = create_df('val.txt')
@@ -81,6 +84,8 @@ nx.set_node_attributes(G, category_name_node_dict, name='category') #Assign Cate
 
 
 nodes_df = pd.DataFrame.from_dict(dict(G.nodes(data=True)), orient='index').sort_index()
+rows = node_rows(nodes_df.index)
+np.random.seed(42); torch.manual_seed(42)
 
 """#Word2Vec Embeddings"""
 
@@ -98,11 +103,7 @@ def word2vec_embeddings():
 
   sentence_embeddings = []
   for title in tokenized_titles:
-    word_embeddings = []
-    for word in title:
-      embedding = model.wv[word][0]
-      word_embeddings.append(embedding)
-    sentence_embeddings.append([np.mean(word_embeddings)])
+    sentence_embeddings.append(mean_embedding(title, model.wv))
   return sentence_embeddings
 
 """#Node2Vec Embeddings and Embeddings as a Tensor"""
@@ -116,7 +117,7 @@ def node2vec_embeddings():
   model = node2vec.fit(window=10, min_count=1)
 
   # Access the embeddings for nodes
-  node_embeddings = [model.wv[node] for node in node_index]
+  node_embeddings = [model.wv[str(node)] for node in node_index]
   return node_embeddings
 
 def make_tensor(embedding_list):
@@ -143,8 +144,8 @@ class GraphSAGENet(nn.Module):
     def __init__(self, in_feats, hidden_feats, out_feats, num_layers):
         super(GraphSAGENet, self).__init__()
         self.layers = nn.ModuleList([
-            dglnn.SAGEConv(in_feats, hidden_feats, 'mean')
-            for _ in range(num_layers)
+            dglnn.SAGEConv(in_feats if i == 0 else hidden_feats, hidden_feats, 'mean')
+            for i in range(num_layers)
         ])
         self.dropout = nn.Dropout(0.35)
         self.prediction = nn.Linear(hidden_feats, out_feats)
@@ -166,7 +167,7 @@ out_feats = 26
 #Create Model
 model = GraphSAGENet(in_feats,hidden_feats, out_feats, num_layers)
 model.eval()
-dgl_graph = dgl.from_networkx(G)
+dgl_graph = dgl.graph(([rows[u] for u,v in G.edges()] + [rows[v] for u,v in G.edges()], [rows[v] for u,v in G.edges()] + [rows[u] for u,v in G.edges()]), num_nodes=len(rows))
 out = model(dgl_graph,node_features)
 
 #Visualize Embeddings and Classes
@@ -202,7 +203,7 @@ for epoch in range(1, 600):
       print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}')
 
 def validation():
-      val_nodes = val_df['Column1'].astype(int).to_list()
+      val_nodes = [rows[n] for n in val_df['Column1'].astype(int)]
       val_labels = val_df['Column2'].astype(int).to_list()
 
       model.eval()
@@ -215,7 +216,7 @@ def validation():
        # print(f'Val Prediction: {prediction}, Actual: {actual} ')
       return val_acc
 val_acc = validation()
-print(f'Test Accuracy: {val_acc}')
+print(f'Validation Accuracy: {val_acc}')
 
 out = model(dgl_graph,node_features)
 node_ids = [node for node in G.nodes]
@@ -224,5 +225,8 @@ predicted_classes = out.argmax(dim=1)
 #visualize(out[mask], color=labels)
 
 for node_id in sorted(test_nodes):
-    print(f"{node_id} {predicted_classes[node_id].item()}")
-    #print(f"Node: {node_id}, Predicted Class #: {predicted_classes[node_id].item()}, Class Name: {category_convert_dict[predicted_classes[node_id].item()]}")
+    print(f"{node_id} {predicted_classes[rows[node_id]].item()}")
+    #print(f"Node: {node_id}, Predicted Class #: {predicted_classes[rows[node_id]].item()}, Class Name: {category_convert_dict[predicted_classes[rows[node_id]].item()]}")
+
+# Keep node identities and exact features together with model parameters.
+torch.save({"state_dict":model.state_dict(),"node_ids":list(nodes_df.index),"features":node_features,"in_feats":in_feats,"hidden_feats":hidden_feats,"out_feats":out_feats,"num_layers":num_layers},"classifier_artifacts.pt")
