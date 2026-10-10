@@ -168,7 +168,8 @@ out_feats = 26
 model = GraphSAGENet(in_feats,hidden_feats, out_feats, num_layers)
 model.eval()
 dgl_graph = dgl.graph(([rows[u] for u,v in G.edges()] + [rows[v] for u,v in G.edges()], [rows[v] for u,v in G.edges()] + [rows[u] for u,v in G.edges()]), num_nodes=len(rows))
-out = model(dgl_graph,node_features)
+with torch.no_grad():
+    out = model(dgl_graph,node_features)
 
 #Visualize Embeddings and Classes
 labels = tensor(nodes_df['category_number'].dropna().tolist(), dtype=torch.long)
@@ -207,7 +208,8 @@ def validation():
       val_labels = val_df['Column2'].astype(int).to_list()
 
       model.eval()
-      out = model(dgl_graph,node_features)
+      with torch.no_grad():
+          out = model(dgl_graph,node_features)
       pred = out.argmax(dim=1)  # Class with highest probability.
 
       val_correct = pred[val_nodes].numpy() == val_labels  # True if Pred Label is Correct
@@ -218,7 +220,8 @@ def validation():
 val_acc = validation()
 print(f'Validation Accuracy: {val_acc}')
 
-out = model(dgl_graph,node_features)
+with torch.no_grad():
+    out = model(dgl_graph,node_features)
 node_ids = [node for node in G.nodes]
 predicted_classes = out.argmax(dim=1)
 
